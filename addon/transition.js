@@ -41,11 +41,13 @@ Transition.prototype = {
   _invokeAnimation: function() {
     var self = this,
         animation = this.animation,
+        elt = this.parentView.$(),
         inserter = function(){
           var contained = !self.parentView.get('containerless');
           if (contained) {
             self.parentView.cacheSize();
             goAbsolute(self.oldView);
+            applyAnimatingClass(elt[0]);
           }
           return self._insertNewView().then(function(newView){
             if (!newView) {
@@ -59,6 +61,7 @@ Transition.prototype = {
                 var size = getSize(newView);
                 self.parentView.adaptSize();
                 goAbsolute(newView, size);
+                applyAnimatingClass(elt[0]);
               }
               return self.newView = newView;
             }
@@ -74,6 +77,7 @@ Transition.prototype = {
       if (!self.interruptedLate) {
         goStatic(self.newView);
         self.parentView.unlockSize();
+        clearAnimatingClass(elt[0]);
       }
     });
   },
@@ -145,6 +149,25 @@ function goStatic(view) {
   }
 }
 
+function applyAnimatingClass(elt) {
+  var existingClasses = elt.className.split(/\s+/),
+      hasAnimatingClass = false;
+
+  for (var i=0; i<existingClasses.length; i++) {
+    if (existingClasses[i] === 'liquid-animating') {
+      hasAnimatingClass = true;
+      break;
+    }
+  }
+  if (!hasAnimatingClass) {
+    elt.className += ' liquid-animating';
+  }
+}
+
+function clearAnimatingClass(elt) {
+  elt.className =
+  elt.className.replace(/\b liquid-animating\b/, '');
+}
 
 
 export default Transition;
